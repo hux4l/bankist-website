@@ -592,3 +592,46 @@ console.log(h1.parentElement.children);
 })
 */
 
+// Lifecycle DOM events
+/*
+
+// when os on bottom of the HTML element, we dont need to listen to DOM loaded
+document.addEventListener('DOMContentLoaded', function (e) {
+  // logs when is successfully loaded page
+  console.log('HTML parsed and DOM tree built!', e);
+});
+
+// when is 100% loaded with all the images
+window.addEventListener('load', function (e) {
+  console.log('Page fully loaded', e);
+})
+
+// before user leaves the page, closes tab, browser
+// that annoying popup...
+// window.addEventListener('beforeunload', function (e) {
+//   e.preventDefault();
+//   console.log(e);
+//   e.returnValue = '';
+// });
+*/
+
+
+// efficient script loading
+// defer
+/*
+* will parse HTML without interrupting, fetch script with HTML and execute after HTML is parsed
+* force the DOM to load and execute after
+* best to use in header
+* guarantee load order
+* */
+
+// async
+/*
+* will load HTML with scripts, but will HTML wait for script to load the rest, will finish with HTML
+* DOM not waits for all scripts to execute
+* they dont guarantee to load in the exact order as needed
+* for code my script dont need
+* */
+
+// when in head
+// not good, it always slows the page HTML loading
