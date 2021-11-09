@@ -167,7 +167,6 @@ img {
 .nav__link--btn:active {
   color: inherit;
   background-color: var(--color-primary-darker);
-  color: #333;
 }
 
 /* HEADER */

@@ -8,6 +8,18 @@ const overlay = document.querySelector('.overlay');
 const btnCloseModal = document.querySelector('.btn--close-modal');
 const btnsOpenModal = document.querySelectorAll('.btn--show-modal');
 
+const btnScrollTo = document.querySelector('.btn--scroll-to');
+const section1 = document.querySelector('#section--1');
+
+const tabs = document.querySelectorAll('.operations__tab');
+const tabsContainer = document.querySelector('.operations__tab-container');
+const tabsContent = document.querySelectorAll('.operations__content');
+
+const nav = document.querySelector('.nav');
+
+const header = document.querySelector('.header');
+
+// Modal window
 const openModal = function (e) {
   e.preventDefault();
   modal.classList.remove('hidden');
@@ -36,6 +48,217 @@ document.addEventListener('keydown', function (e) {
   }
 });
 
+// Smooth scrolling
+
+// button scrolling
+btnScrollTo.addEventListener('click', function (e) {
+  e.preventDefault();
+  /* OLD WAY
+
+    // gets the rectangle from DOM size of the element
+    const s1coords = section1.getBoundingClientRect();
+    console.log(s1coords);
+
+    console.log(e.target.getBoundingClientRect());
+    // current scroll position
+    console.log('Current scroll x/y', window.pageXOffset, window.pageYOffset);
+    console.log('height/width viewport', document.documentElement.clientHeight, document.documentElement.clientWidth);
+
+    // scrolling, old way
+    // window.scrollTo({left: s1coords.left + window.pageXOffset, top: s1coords.top + window.pageYOffset, behavior: 'smooth',});
+  */
+
+  // new way
+  section1.scrollIntoView({behavior: 'smooth'});
+});
+
+////////////////////////////////////
+// Page navigation
+/*
+
+// with many links it will be problem
+document.querySelectorAll('.nav__link').forEach(function (el) {
+  el.addEventListener('click', function (e) {
+    e.preventDefault();
+    // gets href attribute from link href
+    const id = this.getAttribute('href');
+    // creates section selector based on id attribute we get
+    const section = document.querySelector(id);
+    // smooth scroll to given section
+    section.scrollIntoView({behavior: 'smooth'});
+  });
+});
+*/
+
+// 1. Add event listener to common parent element
+// 2. Determine what element originated the event
+document.querySelector('.nav__links').addEventListener('click', function (e) {
+  e.preventDefault();
+
+  // matching strategy
+  if (e.target.classList.contains('nav__link')) {
+    const id = e.target.getAttribute('href');
+    // if id is not # apply smooth scrolling
+    if (id !== '#') {
+      const section = document.querySelector(id);
+      section.scrollIntoView({behavior: 'smooth'});
+    }
+  }
+})
+
+////////////////////////////////////
+// Tabbing component
+
+tabsContainer.addEventListener('click', function (el) {
+  el.preventDefault();
+
+  const clicked = el.target.closest('.operations__tab');
+  // console.log(clicked);
+
+  // Guard clause, if nothing clicked dont do anything
+  if (!clicked) return;
+
+  // remove active classes
+  tabs.forEach(t => t.classList.remove('operations__tab--active'));
+  tabsContent.forEach(t => t.classList.remove('operations__content--active'));
+
+  // active tab
+  clicked.classList.add('operations__tab--active');
+
+  // active content area
+  // console.log(clicked.dataset.tab);
+  document.querySelector(`.operations__content--${clicked.dataset.tab}`).classList.add('operations__content--active');
+});
+
+
+///////////////////////////////////////////
+// passing arguments into event handlers
+
+// Menu fade animation
+const fadeOut = function (e) {
+  if(e.target.classList.contains('nav__link')) {
+    const link = e.target;
+    const siblings = link.closest('.nav').querySelectorAll('.nav__link');
+    const logo = link.closest('.nav').querySelector('img');
+
+    siblings.forEach(el => {
+      if (el !== link) el.style.opacity = this;
+    });
+    logo.style.opacity = this;
+  }
+}
+
+// passing "argument" into handler
+// workaround that event handler functions can get only one argument
+nav.addEventListener('mouseover', fadeOut.bind(0.5));
+nav.addEventListener('mouseout', fadeOut.bind(1));
+
+
+///////////////////////////////////////
+// sticky navigation
+
+// window.addEventListener('scroll', function (e) {
+//
+//   // sticky navigation
+//   const initialCoords = section1.getBoundingClientRect();
+//
+//   if (window.scrollY > initialCoords.top) {
+//     nav.classList.add('sticky');
+//   } else {
+//     nav.classList.remove('sticky');
+//   }
+// });
+
+// observation api, intersection
+
+/*
+
+// call each time the section1 hits 10% of observed section
+const obsCallback = function f(entries, observer) {
+  entries.forEach(entry => {
+    console.log(entry);
+  })
+};
+
+// options for observer, root will look for whole document, threshold is tolerance
+const obsOptions = {
+  root: null,
+  threshold: [0, 0.2],
+};
+
+const observer = new IntersectionObserver(obsCallback, obsOptions);
+observer.observe(section1);
+*/
+
+const navHeight = nav.getBoundingClientRect().height;
+
+// callback function for observer
+const stickyNav = function (entries) {
+  const [entry] = entries;
+  if (!entry.isIntersecting) {
+    nav.classList.add('sticky');
+  } else {
+    nav.classList.remove('sticky');
+  }
+}
+
+// observer for header section
+const headerObserver = new IntersectionObserver(stickyNav, {
+  root: null,
+  threshold: 0,
+  // gets nav height sooner as the intersection threshold starts
+  rootMargin: `-${navHeight}px`,
+});
+headerObserver.observe(header);
+
+///////////////////////////////////////
+// revealing elements on scroll
+
+// reveal section
+
+const allSections = document.querySelectorAll('.section');
+const revealSection = function (entries, observer) {
+  const [entry] = entries;
+  console.log(entry);
+
+  if (!entry.isIntersecting) return;
+
+  if (entry.isIntersecting) {
+    entry.target.classList.remove('section--hidden');
+  }
+  observer.unobserve(entry.target);
+};
+
+// reveal section when is visible on 15%
+const sectionsObserver = new IntersectionObserver(revealSection, {
+  root: null,
+  threshold: 0.15,
+});
+// adds to all sections intersection observer
+allSections.forEach((function (section) {
+  sectionsObserver.observe(section);
+  section.classList.add('section--hidden');
+}))
+
+
+
+
+// {
+//
+//   if(e.target.classList.contains('nav__link')) {
+//     const link = e.target;
+//     const siblings = link.closest('.nav').querySelectorAll('.nav__link');
+//     const logo = link.closest('.nav').querySelector('img');
+//
+//     siblings.forEach(el => {
+//       if (el !== link) el.style.opacity = 1;
+//     });
+//     logo.style.opacity = 1;
+//   }
+//
+//   fadeOut(e, 1);
+//
+// });
 /*
 
 // selecting, creating and deleting elements
@@ -133,5 +356,108 @@ logo.classList.remove('c');
 logo.classList.toggle('c');
 console.log(logo.classList.contains('c'));
 
+*/
+
+
+
+
+// types of events and event handlers
+/*
+
+const alertH1 = function (e) {
+  alert('addEventListener: Great! You are reading the heading');
+
+  h1.removeEventListener('mouseenter', alertH1);
+}
+
+const h1 = document.querySelector('h1');
+h1.addEventListener('mouseenter', alertH1);
+
+setTimeout(() => h1.removeEventListener('mouseenter', alertH1), 3000);
+
+// another way, old way to do it
+// h1.onmouseenter = function (e) {
+//   alert('addEventListener: Great! You are reading the heading')
+// };
+*/
+
+/*
+
+// Bubbling and Capturing events
+// event propagation
+// bubbling
+// rgb(0 , 0, 0)
+const rndInt = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
+const rndColor = () => `rgb(${rndInt(0, 255)}, ${rndInt(0, 255)}, ${rndInt(0, 255)})`;
+console.log(rndColor());
+
+const nav = document.querySelector('.nav');
+const navLinks = document.querySelector('.nav__links');
+const navLink = document.querySelector('.nav__link');
+
+navLink.addEventListener('click', function (e) {
+  e.preventDefault();
+  this.style.backgroundColor = rndColor();
+  console.log('LINK', e.target, e.currentTarget);
+  console.log(e.currentTarget === this);
+
+  // stop propagation
+  // event applies only on first element not on the parent elements
+  e.stopPropagation();
+});
+
+navLinks.addEventListener('click', function (e) {
+  e.preventDefault();
+  this.style.backgroundColor = rndColor();
+  console.log('CONTAINER', e.target, e.currentTarget);
+});
+
+
+// third parameter, capture parameter, will not listen to bubbling but capture event
+nav.addEventListener('click', function (e) {
+  e.preventDefault();
+  this.style.backgroundColor = rndColor();
+  console.log('NAV', e.target, e.currentTarget);
+}
+// , true
+);
+
+*/
+
+// dom traversing
+/*
+
+const h1 = document.querySelector('h1');
+// going downwards: child
+// works no matter how depp they are into the DOM tree
+console.log(h1.querySelectorAll('.highlight'));
+// returns all child nodes inc text
+console.log(h1.childNodes);
+// live children nodes, only direct children
+console.log(h1.children);
+h1.firstElementChild.style.color = 'white';
+
+// going upwards: parents
+console.log(h1.parentNode);
+console.log(h1.parentElement);
+
+// we need to find parent element no matter how far is
+h1.closest('.header').style.background = 'var(--gradient-primary)';
+
+// going sideways: siblings
+console.log(h1.previousElementSibling);
+console.log(h1.nextElementSibling);
+
+console.log(h1.previousSibling);
+console.log(h1.nextSibling);
+
+console.log(h1.parentElement.children);
+// we can work as with array
+// scale all siblings except h1
+[...h1.parentElement.children].forEach(function (el) {
+  if(el !== h1) {
+    el.style.transform = 'scale(0.5)';
+  }
+})
 */
 
